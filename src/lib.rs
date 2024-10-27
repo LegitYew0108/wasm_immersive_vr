@@ -20,10 +20,7 @@ pub async fn run() -> Result<(), JsValue>{
             let session_jsval = JsFuture::from(xrsystem.request_session(XrSessionMode::ImmersiveVr)).await?;
             if XrSession::instanceof(&session_jsval){
                 console::log_1(&"Session create succeed".into());
-                XrSession::unchecked_from_js(session_jsval).and_then(|session: XrSession|{
-                    console::log_1(&"Session created".into());
-                    Ok(())
-                });
+                let session = XrSession::unchecked_from_js(session_jsval);
             }
             else{
                 console::log_1(&"WebXR session could not created".into());
