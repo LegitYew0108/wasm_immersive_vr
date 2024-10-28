@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use web_sys::{console, XrSessionMode, XrSystem, XrSession};
+use web_sys::{console, XrSessionMode, XrReferenceSpace, XrRigidTransform, XrSession, XrRenderStateInit};
 use wasm_bindgen_futures::JsFuture;
 
 #[wasm_bindgen(start)]
@@ -21,6 +21,7 @@ pub async fn run() -> Result<(), JsValue>{
             if XrSession::instanceof(&session_jsval){
                 console::log_1(&"Session create succeed".into());
                 let session = XrSession::unchecked_from_js(session_jsval);
+                run_session(session).await?
             }
             else{
                 console::log_1(&"WebXR session could not created".into());
@@ -47,9 +48,20 @@ pub async fn run() -> Result<(), JsValue>{
         body.append_child(&default_val)?;
         return Ok(());
     }
-
-    
-
     Ok(())
 }
 
+#[wasm_bindgen]
+pub async fn run_session(session: XrSession) -> Result<(), JsValue>{
+    session.add_event_listener_with_callback("end", &js_sys::Function::new_no_args("on_session_end"))?;
+    let xr_render_init = XrRenderStateInit::new();
+    session.update_render_state_with_state(&xr_render_init);
+    let reference_space = JsFuture::from(session.request_reference_space(web_sys::XrReferenceSpaceType::Unbounded)).await?;
+    if XrReferenceSpace::instanceof(&reference_space){
+        let reference_space = XrReferenceSpace::unchecked_from_js(reference_space);
+        let offset_space = XrRigidTransform::new()?;
+        reference_space.get_offset_reference_space(&offset_space);
+        session.request_animation_frame(&js_sys::Function::new_no_args("on_animation_frame"));
+    }
+    Ok(())
+}

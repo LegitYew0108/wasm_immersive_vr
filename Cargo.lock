@@ -297,6 +297,7 @@ name = "wasm_immersive_vr"
 version = "0.1.0"
 dependencies = [
  "color-spantrace",
+ "js-sys",
  "tracing",
  "tracing-error",
  "tracing-subscriber",
